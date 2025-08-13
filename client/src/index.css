@@ -1,0 +1,132 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(93, 44%, 12%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(93, 44%, 12%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(93, 44%, 12%);
+  --primary: hsl(123, 46%, 34%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(36, 77%, 57%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(78, 60%, 95%);
+  --muted-foreground: hsl(93, 44%, 12%);
+  --accent: hsl(78, 60%, 95%);
+  --accent-foreground: hsl(93, 44%, 12%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(78, 60%, 90%);
+  --input: hsl(78, 60%, 95%);
+  --ring: hsl(123, 46%, 34%);
+  --chart-1: hsl(123, 46%, 34%);
+  --chart-2: hsl(36, 77%, 57%);
+  --chart-3: hsl(90, 61%, 56%);
+  --chart-4: hsl(93, 44%, 12%);
+  --chart-5: hsl(78, 60%, 95%);
+  
+  /* Custom agricultural colors */
+  --forest-green: hsl(123, 46%, 34%);
+  --harvest-orange: hsl(36, 77%, 57%);
+  --light-green: hsl(78, 60%, 95%);
+  --dark-green: hsl(93, 44%, 12%);
+  --lime-green: hsl(90, 61%, 56%);
+  
+  --font-sans: 'Open Sans', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --font-roboto: 'Roboto', sans-serif;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: hsl(93, 44%, 12%);
+  --foreground: hsl(78, 60%, 95%);
+  --card: hsl(93, 30%, 20%);
+  --card-foreground: hsl(78, 60%, 95%);
+  --popover: hsl(93, 44%, 12%);
+  --popover-foreground: hsl(78, 60%, 95%);
+  --primary: hsl(90, 61%, 56%);
+  --primary-foreground: hsl(93, 44%, 12%);
+  --secondary: hsl(36, 77%, 57%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(93, 30%, 20%);
+  --muted-foreground: hsl(78, 30%, 70%);
+  --accent: hsl(93, 30%, 20%);
+  --accent-foreground: hsl(90, 61%, 56%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(93, 30%, 20%);
+  --input: hsl(93, 30%, 25%);
+  --ring: hsl(90, 61%, 56%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: var(--font-roboto);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-roboto);
+  }
+}
+
+@layer utilities {
+  .text-forest-green {
+    color: var(--forest-green);
+  }
+  
+  .text-harvest-orange {
+    color: var(--harvest-orange);
+  }
+  
+  .text-dark-green {
+    color: var(--dark-green);
+  }
+  
+  .text-lime-green {
+    color: var(--lime-green);
+  }
+  
+  .bg-forest-green {
+    background-color: var(--forest-green);
+  }
+  
+  .bg-harvest-orange {
+    background-color: var(--harvest-orange);
+  }
+  
+  .bg-light-green {
+    background-color: var(--light-green);
+  }
+  
+  .bg-dark-green {
+    background-color: var(--dark-green);
+  }
+  
+  .bg-lime-green {
+    background-color: var(--lime-green);
+  }
+  
+  .border-forest-green {
+    border-color: var(--forest-green);
+  }
+  
+  .hover\:bg-forest-green:hover {
+    background-color: var(--forest-green);
+  }
+  
+  .hover\:bg-harvest-orange:hover {
+    background-color: var(--harvest-orange);
+  }
+}
