@@ -38,7 +38,7 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: messages = [] } = useQuery({
+  const { data: messages = [] } = useQuery<any[]>({
     queryKey: ['/api/messages'],
     enabled: !!user?.id,
   });
@@ -350,6 +350,7 @@ export default function Dashboard() {
                               type="url" 
                               placeholder="https://example.com/image.jpg" 
                               {...field}
+                              value={field.value || ''}
                               data-testid="product-image"
                             />
                           </FormControl>

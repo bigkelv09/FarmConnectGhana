@@ -267,7 +267,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                   <FormItem>
                     <FormLabel>Location (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="City, Region" {...field} data-testid="register-location" />
+                      <Input placeholder="City, Region" {...field} value={field.value || ''} data-testid="register-location" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -280,7 +280,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                   <FormItem>
                     <FormLabel>Phone (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="+233 XX XXX XXXX" {...field} data-testid="register-phone" />
+                      <Input placeholder="+233 XX XXX XXXX" {...field} value={field.value || ''} data-testid="register-phone" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

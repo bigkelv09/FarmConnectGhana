@@ -149,6 +149,8 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
+      location: insertUser.location || null,
+      phone: insertUser.phone || null,
       verified: false,
       createdAt: new Date(),
     };
@@ -185,7 +187,7 @@ export class MemStorage implements IStorage {
       products = products.filter(p => p.sellerId === filters.sellerId);
     }
     
-    return products.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return products.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
@@ -199,6 +201,7 @@ export class MemStorage implements IStorage {
       ...insertProduct,
       id,
       sellerId,
+      imageUrl: insertProduct.imageUrl || null,
       featured: false,
       active: true,
       createdAt: new Date(),
@@ -229,7 +232,7 @@ export class MemStorage implements IStorage {
   async getFeaturedProducts(): Promise<Product[]> {
     return Array.from(this.products.values())
       .filter(p => p.active && p.featured)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
       .slice(0, 8);
   }
 
@@ -237,7 +240,7 @@ export class MemStorage implements IStorage {
   async getMessages(userId: string): Promise<Message[]> {
     return Array.from(this.messages.values())
       .filter(m => m.senderId === userId || m.receiverId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   }
 
   async getConversation(userId1: string, userId2: string): Promise<Message[]> {
@@ -246,7 +249,7 @@ export class MemStorage implements IStorage {
         (m.senderId === userId1 && m.receiverId === userId2) ||
         (m.senderId === userId2 && m.receiverId === userId1)
       )
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
   }
 
   async createMessage(senderId: string, insertMessage: InsertMessage): Promise<Message> {
@@ -255,6 +258,7 @@ export class MemStorage implements IStorage {
       ...insertMessage,
       id,
       senderId,
+      productId: insertMessage.productId || null,
       read: false,
       createdAt: new Date(),
     };

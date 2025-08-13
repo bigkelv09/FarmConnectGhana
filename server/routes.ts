@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertProductSchema, insertMessageSchema } from "@shared/schema";
@@ -7,8 +7,17 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
+// Extend Request type to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { id: string; email: string };
+    }
+  }
+}
+
 // Middleware to verify JWT token
-function authenticateToken(req: any, res: any, next: any) {
+function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -16,9 +25,9 @@ function authenticateToken(req: any, res: any, next: any) {
     return res.status(401).json({ message: 'Access token required' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+  jwt.verify(token, JWT_SECRET, (err: jwt.JsonWebTokenError | null, user: any) => {
     if (err) return res.status(403).json({ message: 'Invalid token' });
-    req.user = user;
+    req.user = user as { id: string; email: string };
     next();
   });
 }
@@ -103,6 +112,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/me", authenticateToken, async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const user = await storage.getUser(req.user.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -166,6 +179,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", authenticateToken, async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const productData = insertProductSchema.parse(req.body);
       const product = await storage.createProduct(req.user.id, productData);
       res.status(201).json(product);
@@ -177,6 +194,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/products/:id", authenticateToken, async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const updates = req.body;
       const product = await storage.updateProduct(req.params.id, req.user.id, updates);
       
@@ -193,6 +214,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/products/:id", authenticateToken, async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const success = await storage.deleteProduct(req.params.id, req.user.id);
       
       if (!success) {
@@ -228,6 +253,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Message routes
   app.get("/api/messages", authenticateToken, async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const messages = await storage.getMessages(req.user.id);
       res.json(messages);
     } catch (error) {
@@ -238,6 +267,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/messages", authenticateToken, async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
       const messageData = insertMessageSchema.parse(req.body);
       const message = await storage.createMessage(req.user.id, messageData);
       res.status(201).json(message);

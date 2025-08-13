@@ -79,7 +79,7 @@ export default function Marketplace() {
           return a.name.localeCompare(b.name);
         case 'newest':
         default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0);
       }
     });
 

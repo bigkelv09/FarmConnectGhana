@@ -266,7 +266,7 @@ export default function ProductDetail() {
                 <div>
                   <p className="text-sm text-gray-600">Listed</p>
                   <p className="font-semibold" data-testid="product-listed-date">
-                    {new Date(productData.createdAt).toLocaleDateString()}
+                    {productData.createdAt ? new Date(productData.createdAt).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
               </div>
