@@ -156,6 +156,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/products/latest", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 6;
+      const products = await storage.getLatestProducts(limit);
+      res.json(products);
+    } catch (error) {
+      console.error("Get latest products error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   app.get("/api/products/:id", async (req, res) => {
     try {
       const product = await storage.getProduct(req.params.id);
@@ -294,6 +305,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Get stats error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/users/trusted-sellers", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 6;
+      const sellers = await storage.getTrustedSellers(limit);
+      const sellersWithoutPassword = sellers.map(({ password, ...seller }) => seller);
+      res.json(sellersWithoutPassword);
+    } catch (error) {
+      console.error("Get trusted sellers error:", error);
       res.status(500).json({ message: "Server error" });
     }
   });

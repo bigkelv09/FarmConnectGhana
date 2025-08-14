@@ -7,7 +7,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
-  
+  getTrustedSellers(limit?: number): Promise<User[]>;
+
   // Product operations
   getProducts(filters?: { category?: string; search?: string; sellerId?: string }): Promise<Product[]>;
   getProduct(id: string): Promise<Product | undefined>;
@@ -15,7 +16,8 @@ export interface IStorage {
   updateProduct(id: string, sellerId: string, updates: Partial<Product>): Promise<Product | undefined>;
   deleteProduct(id: string, sellerId: string): Promise<boolean>;
   getFeaturedProducts(): Promise<Product[]>;
-  
+  getLatestProducts(limit?: number): Promise<Product[]>;
+
   // Message operations
   getMessages(userId: string): Promise<Message[]>;
   getConversation(userId1: string, userId2: string): Promise<Message[]>;
@@ -164,6 +166,14 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
 
+  async getTrustedSellers(limit?: number): Promise<User[]> {
+    const trustedSellers = Array.from(this.users.values())
+      .filter(user => user.accountType === "farmer" && user.verified)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+    return limit ? trustedSellers.slice(0, limit) : trustedSellers;
+  }
+
   // Product operations
   async getProducts(filters?: { category?: string; search?: string; sellerId?: string }): Promise<Product[]> {
     let products = Array.from(this.products.values()).filter(p => p.active);
@@ -228,6 +238,14 @@ export class MemStorage implements IStorage {
     return Array.from(this.products.values())
       .filter(p => p.active && p.featured)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getLatestProducts(limit?: number): Promise<Product[]> {
+    const latestProducts = Array.from(this.products.values())
+      .filter(p => p.active)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return limit ? latestProducts.slice(0, limit) : latestProducts;
   }
 
   // Message operations
