@@ -103,36 +103,36 @@ export class MemStorage implements IStorage {
       {
         id: "prod3",
         sellerId: "farmer1",
-        name: "Dry Yellow Corn",
-        description: "Premium quality corn, perfect for animal feed or processing. Clean and dry.",
-        category: "crops" as const,
-        price: "8.50",
-        unit: "kg",
-        quantity: 500,
-        location: "Tamale",
-        imageUrl: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&h=300&fit=crop",
-        featured: true,
-        active: true,
-        createdAt: new Date(),
-      },
-      {
-        id: "prod4",
-        sellerId: "farmer2",
-        name: "NPK Fertilizer",
-        description: "Complete nutrition for all crop types. High quality 50kg bags.",
+        name: "Organic Fertilizer",
+        description: "100% organic fertilizer made from compost. Great for all crop types.",
         category: "medications" as const,
-        price: "125.00",
+        price: "25.00",
         unit: "bag",
-        quantity: 20,
-        location: "Cape Coast",
+        quantity: 50,
+        location: "Kumasi",
         imageUrl: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
-        featured: true,
+        featured: false,
         active: true,
         createdAt: new Date(),
       }
     ];
     
     sampleProducts.forEach(product => this.products.set(product.id, product));
+
+    // Sample messages
+    const sampleMessages = [
+      {
+        id: "msg1",
+        senderId: "farmer2",
+        receiverId: "farmer1",
+        productId: "prod1",
+        content: "Hi, I'm interested in your tomatoes. Are they still available?",
+        read: false,
+        createdAt: new Date(),
+      }
+    ];
+
+    sampleMessages.forEach(message => this.messages.set(message.id, message));
   }
 
   // User operations
@@ -144,18 +144,15 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.email === email);
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = {
-      ...insertUser,
-      id,
-      location: insertUser.location || null,
-      phone: insertUser.phone || null,
+  async createUser(user: InsertUser): Promise<User> {
+    const newUser: User = {
+      id: randomUUID(),
+      ...user,
       verified: false,
       createdAt: new Date(),
     };
-    this.users.set(id, user);
-    return user;
+    this.users.set(newUser.id, newUser);
+    return newUser;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
@@ -187,7 +184,7 @@ export class MemStorage implements IStorage {
       products = products.filter(p => p.sellerId === filters.sellerId);
     }
     
-    return products.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+    return products.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
@@ -195,19 +192,17 @@ export class MemStorage implements IStorage {
     return product?.active ? product : undefined;
   }
 
-  async createProduct(sellerId: string, insertProduct: InsertProduct): Promise<Product> {
-    const id = randomUUID();
-    const product: Product = {
-      ...insertProduct,
-      id,
+  async createProduct(sellerId: string, product: InsertProduct): Promise<Product> {
+    const newProduct: Product = {
+      id: randomUUID(),
       sellerId,
-      imageUrl: insertProduct.imageUrl || null,
+      ...product,
       featured: false,
       active: true,
       createdAt: new Date(),
     };
-    this.products.set(id, product);
-    return product;
+    this.products.set(newProduct.id, newProduct);
+    return newProduct;
   }
 
   async updateProduct(id: string, sellerId: string, updates: Partial<Product>): Promise<Product | undefined> {
@@ -223,24 +218,23 @@ export class MemStorage implements IStorage {
     const product = this.products.get(id);
     if (!product || product.sellerId !== sellerId) return false;
     
-    // Soft delete
-    product.active = false;
-    this.products.set(id, product);
+    // Soft delete - mark as inactive
+    const updatedProduct = { ...product, active: false };
+    this.products.set(id, updatedProduct);
     return true;
   }
 
   async getFeaturedProducts(): Promise<Product[]> {
     return Array.from(this.products.values())
       .filter(p => p.active && p.featured)
-      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
-      .slice(0, 8);
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   // Message operations
   async getMessages(userId: string): Promise<Message[]> {
     return Array.from(this.messages.values())
       .filter(m => m.senderId === userId || m.receiverId === userId)
-      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getConversation(userId1: string, userId2: string): Promise<Message[]> {
@@ -249,29 +243,27 @@ export class MemStorage implements IStorage {
         (m.senderId === userId1 && m.receiverId === userId2) ||
         (m.senderId === userId2 && m.receiverId === userId1)
       )
-      .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
-  async createMessage(senderId: string, insertMessage: InsertMessage): Promise<Message> {
-    const id = randomUUID();
-    const message: Message = {
-      ...insertMessage,
-      id,
+  async createMessage(senderId: string, message: InsertMessage): Promise<Message> {
+    const newMessage: Message = {
+      id: randomUUID(),
       senderId,
-      productId: insertMessage.productId || null,
+      ...message,
       read: false,
       createdAt: new Date(),
     };
-    this.messages.set(id, message);
-    return message;
+    this.messages.set(newMessage.id, newMessage);
+    return newMessage;
   }
 
   async markMessageRead(id: string, userId: string): Promise<boolean> {
     const message = this.messages.get(id);
     if (!message || message.receiverId !== userId) return false;
     
-    message.read = true;
-    this.messages.set(id, message);
+    const updatedMessage = { ...message, read: true };
+    this.messages.set(id, updatedMessage);
     return true;
   }
 }
