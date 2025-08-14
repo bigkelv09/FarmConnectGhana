@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, decimal, integer, timestamp, boolean } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
@@ -42,6 +42,7 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Create Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
@@ -69,9 +70,10 @@ export const insertMessageSchema = createInsertSchema(messages).pick({
   content: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
+// Type exports
 export type User = typeof users.$inferSelect;
-export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type InsertUser = typeof users.$inferInsert;
 export type Product = typeof products.$inferSelect;
-export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type InsertProduct = typeof products.$inferInsert;
 export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
