@@ -56,6 +56,9 @@ export default function Marketplace() {
 
         const data = await response.json();
         console.log('Products loaded successfully:', data);
+        console.log('Data type:', typeof data);
+        console.log('Is array:', Array.isArray(data));
+        console.log('Data length:', data?.length);
         return data;
       } catch (error) {
         console.error('Fetch error details:', error);
