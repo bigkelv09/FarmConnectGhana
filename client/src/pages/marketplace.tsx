@@ -70,14 +70,11 @@ export default function Marketplace() {
 
   const filteredAndSortedProducts = products
     .filter(product => {
-      // Category filter
-      const matchesCategory = !searchParams.category || product.category === searchParams.category;
-
-      // Price filter
+      // Only do client-side price filtering since server handles category and search
       const matchesPrice = (!searchParams.minPrice || parseFloat(product.price) >= parseFloat(searchParams.minPrice)) &&
                           (!searchParams.maxPrice || parseFloat(product.price) <= parseFloat(searchParams.maxPrice));
 
-      return matchesCategory && matchesPrice;
+      return matchesPrice;
     })
     .sort((a, b) => {
       switch (searchParams.sortBy) {
@@ -125,7 +122,7 @@ export default function Marketplace() {
                   </div>
                 </div>
 
-                {/* Category Filter - FIXED */}
+                {/* Category Filter - FIXED VALUES */}
                 <div>
                   <Label>Category</Label>
                   <Select
@@ -138,7 +135,7 @@ export default function Marketplace() {
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
                       <SelectItem value="crops">Crops</SelectItem>
-                      <SelectItem value="tools">Tools & Equipment</SelectItem>
+                      <SelectItem value="tools">Tools</SelectItem>
                       <SelectItem value="medications">Medications</SelectItem>
                     </SelectContent>
                   </Select>
