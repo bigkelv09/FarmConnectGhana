@@ -44,18 +44,26 @@ export default function Marketplace() {
     queryKey: ['/api/products', buildQueryParams()],
     queryFn: async () => {
       try {
+        console.log('Attempting to fetch:', `/api/products?${buildQueryParams()}`);
+
         const response = await fetch(`/api/products?${buildQueryParams()}`);
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         const data = await response.json();
-        console.log('Products loaded:', data); // Debug log
+        console.log('Products loaded successfully:', data);
         return data;
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        console.error('Fetch error details:', error);
         throw error;
       }
     },
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const handleSearchChange = (field: string, value: string) => {
@@ -105,6 +113,23 @@ export default function Marketplace() {
           <p>Debug: Products count: {products.length}</p>
           <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
           <p>Error: {error ? String(error) : 'None'}</p>
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/products');
+                console.log('Manual test - Status:', response.status);
+                const data = await response.json();
+                console.log('Manual test - Data:', data);
+                alert(`API test: ${response.status} - ${data.length || 0} products`);
+              } catch (error) {
+                console.log('Manual test - Error:', error);
+                alert(`API test failed: ${error}`);
+              }
+            }}
+            className="ml-4 px-3 py-1 bg-green-500 text-white rounded text-sm"
+          >
+            Test API
+          </button>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
