@@ -49,7 +49,6 @@ export default function Marketplace() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log('Products loaded:', data); // Debug log
       return data as Product[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -120,15 +119,18 @@ export default function Marketplace() {
                   </div>
                 </div>
 
-                {/* Category Filter */}
+                {/* Category Filter - FIXED */}
                 <div>
                   <Label>Category</Label>
-                  <Select value={searchParams.category} onValueChange={(value) => handleSearchChange('category', value)}>
+                  <Select
+                    value={searchParams.category || 'all'}
+                    onValueChange={(value) => handleSearchChange('category', value === 'all' ? '' : value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
                       <SelectItem value="crops">Crops</SelectItem>
                       <SelectItem value="tools">Tools & Equipment</SelectItem>
                       <SelectItem value="medications">Medications</SelectItem>
