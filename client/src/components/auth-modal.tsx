@@ -14,7 +14,10 @@ import { z } from 'zod';
 import { X } from 'lucide-react';
 
 interface AuthModalProps {
+  isOpen?: boolean;
   onClose: () => void;
+  mode?: 'login' | 'register';
+  onModeChange?: (mode: 'login' | 'register') => void;
 }
 
 const loginSchema = z.object({
@@ -32,11 +35,21 @@ const registerSchema = insertUserSchema.extend({
 type LoginFormData = z.infer<typeof loginSchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-export function AuthModal({ onClose }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+export function AuthModal({ isOpen = true, onClose, mode = 'login', onModeChange }: AuthModalProps) {
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(mode);
   const [isLoading, setIsLoading] = useState(false);
   const { login, register } = useAuth();
   const { toast } = useToast();
+
+  // Update activeTab when mode prop changes
+  useState(() => {
+    setActiveTab(mode);
+  }, [mode]);
+
+  const handleTabChange = (newTab: 'login' | 'register') => {
+    setActiveTab(newTab);
+    onModeChange?.(newTab);
+  };
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -102,35 +115,30 @@ export function AuthModal({ onClose }: AuthModalProps) {
   };
 
   return (
-    <Dialog open onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md" data-testid="auth-modal">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold text-dark-green">
-              {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
-            </DialogTitle>
-            <Button variant="ghost" size="sm" onClick={onClose} data-testid="close-modal">
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-2xl font-bold text-dark-green">
+            {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
+          </DialogTitle>
         </DialogHeader>
 
         {/* Tab Switcher */}
-        <div className="flex mb-6 bg-light-green rounded-lg p-1">
+        <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
           <button
-            className={`flex-1 py-2 text-center text-dark-green font-medium rounded-md transition-all ${
-              activeTab === 'login' ? 'bg-white shadow-sm' : 'hover:bg-white hover:shadow-sm'
+            className={`flex-1 py-2 text-center font-medium rounded-md transition-all ${
+              activeTab === 'login' ? 'bg-white shadow-sm text-green-700' : 'text-gray-600 hover:bg-white hover:shadow-sm'
             }`}
-            onClick={() => setActiveTab('login')}
+            onClick={() => handleTabChange('login')}
             data-testid="login-tab"
           >
             Login
           </button>
           <button
-            className={`flex-1 py-2 text-center text-dark-green font-medium rounded-md transition-all ${
-              activeTab === 'register' ? 'bg-white shadow-sm' : 'hover:bg-white hover:shadow-sm'
+            className={`flex-1 py-2 text-center font-medium rounded-md transition-all ${
+              activeTab === 'register' ? 'bg-white shadow-sm text-green-700' : 'text-gray-600 hover:bg-white hover:shadow-sm'
             }`}
-            onClick={() => setActiveTab('register')}
+            onClick={() => handleTabChange('register')}
             data-testid="register-tab"
           >
             Register
