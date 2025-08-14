@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Product } from '@shared/schema';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Loader2 } from 'lucide-react';
 
 export default function Marketplace() {
   const [location, setLocation] = useLocation();
@@ -40,7 +40,7 @@ export default function Marketplace() {
     return params.toString();
   };
 
-  const { data: products = [], isLoading } = useQuery<Product[]>({
+  const { data: products = [], isLoading, error } = useQuery<Product[]>({
     queryKey: ['/api/products', buildQueryParams()],
     queryFn: async () => {
       const response = await fetch(`/api/products?${buildQueryParams()}`);
@@ -52,13 +52,13 @@ export default function Marketplace() {
   const handleSearchChange = (field: string, value: string) => {
     const newParams = { ...searchParams, [field]: value };
     setSearchParams(newParams);
-    
+
     // Update URL
     const urlParams = new URLSearchParams();
     Object.entries(newParams).forEach(([key, val]) => {
       if (val) urlParams.set(key, val);
     });
-    
+
     const newUrl = `/marketplace${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
     setLocation(newUrl);
   };
@@ -86,7 +86,7 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen bg-light-green">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
@@ -99,17 +99,33 @@ export default function Marketplace() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Search */}
+                <div>
+                  <Label htmlFor="search">Search Products</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="search"
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchParams.search}
+                      onChange={(e) => handleSearchChange('search', e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
                 {/* Category Filter */}
                 <div>
-                  <Label htmlFor="category">Category</Label>
+                  <Label>Category</Label>
                   <Select value={searchParams.category} onValueChange={(value) => handleSearchChange('category', value)}>
-                    <SelectTrigger data-testid="category-filter">
+                    <SelectTrigger>
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">All Categories</SelectItem>
                       <SelectItem value="crops">Crops</SelectItem>
-                      <SelectItem value="tools">Farm Tools</SelectItem>
+                      <SelectItem value="tools">Tools & Equipment</SelectItem>
                       <SelectItem value="medications">Medications</SelectItem>
                     </SelectContent>
                   </Select>
@@ -117,44 +133,26 @@ export default function Marketplace() {
 
                 {/* Price Range */}
                 <div>
-                  <Label>Price Range (GHS)</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <Label>Price Range (GH₵)</Label>
+                  <div className="flex gap-2">
                     <Input
                       type="number"
                       placeholder="Min"
                       value={searchParams.minPrice}
                       onChange={(e) => handleSearchChange('minPrice', e.target.value)}
-                      data-testid="min-price-filter"
                     />
                     <Input
                       type="number"
                       placeholder="Max"
                       value={searchParams.maxPrice}
                       onChange={(e) => handleSearchChange('maxPrice', e.target.value)}
-                      data-testid="max-price-filter"
                     />
                   </div>
                 </div>
 
-                {/* Sort By */}
-                <div>
-                  <Label htmlFor="sortBy">Sort By</Label>
-                  <Select value={searchParams.sortBy} onValueChange={(value) => handleSearchChange('sortBy', value)}>
-                    <SelectTrigger data-testid="sort-filter">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="newest">Newest First</SelectItem>
-                      <SelectItem value="price-low">Price: Low to High</SelectItem>
-                      <SelectItem value="price-high">Price: High to Low</SelectItem>
-                      <SelectItem value="name">Name: A to Z</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Clear Filters */}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setSearchParams({
                       search: '',
@@ -166,73 +164,102 @@ export default function Marketplace() {
                     setLocation('/marketplace');
                   }}
                   className="w-full"
-                  data-testid="clear-filters"
                 >
-                  Clear All Filters
+                  Clear Filters
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* Product Grid */}
+          {/* Main Content */}
           <div className="lg:w-3/4">
-            <div className="flex justify-between items-center mb-6">
+            {/* Header with sort */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-dark-green" data-testid="marketplace-title">
-                  Agricultural Marketplace
-                </h1>
-                <p className="text-gray-600 mt-2" data-testid="results-count">
-                  {isLoading ? 'Loading...' : `${filteredAndSortedProducts.length} products found`}
+                <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
+                <p className="text-gray-600 mt-1">
+                  {filteredAndSortedProducts.length} product(s) found
                 </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Label htmlFor="sort" className="text-sm font-medium">
+                  Sort by:
+                </Label>
+                <Select value={searchParams.sortBy} onValueChange={(value) => handleSearchChange('sortBy', value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="name">Name: A to Z</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Card key={i} className="animate-pulse" data-testid={`skeleton-${i}`}>
-                    <div className="h-48 bg-gray-200" />
-                    <CardContent className="p-4">
-                      <div className="h-4 bg-gray-200 rounded mb-2" />
-                      <div className="h-4 bg-gray-200 rounded mb-2" />
-                      <div className="h-4 bg-gray-200 rounded w-1/2" />
-                    </CardContent>
-                  </Card>
-                ))}
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">Loading products...</span>
               </div>
-            ) : filteredAndSortedProducts.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2" data-testid="no-products-title">
-                    No products found
-                  </h3>
-                  <p className="text-gray-600 mb-4" data-testid="no-products-description">
-                    Try adjusting your search terms or filters to find what you're looking for.
-                  </p>
-                  <Button 
-                    onClick={() => {
-                      setSearchParams({
-                        search: '',
-                        category: '',
-                        sortBy: 'newest',
-                        minPrice: '',
-                        maxPrice: '',
-                      });
-                      setLocation('/marketplace');
-                    }}
-                    data-testid="clear-search"
-                  >
-                    Clear Search
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="products-grid">
-                {filteredAndSortedProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="text-center py-12">
+                <p className="text-red-600">Failed to load products. Please try again.</p>
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.reload()}
+                  className="mt-4"
+                >
+                  Retry
+                </Button>
               </div>
+            )}
+
+            {/* Products Grid */}
+            {!isLoading && !error && (
+              <>
+                {filteredAndSortedProducts.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredAndSortedProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <Search className="h-16 w-16 mx-auto" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                      No products found
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      Try adjusting your search criteria or filters
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchParams({
+                          search: '',
+                          category: '',
+                          sortBy: 'newest',
+                          minPrice: '',
+                          maxPrice: '',
+                        });
+                        setLocation('/marketplace');
+                      }}
+                    >
+                      Clear all filters
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
