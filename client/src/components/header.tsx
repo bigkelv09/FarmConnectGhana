@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery } from '@tanstack/react-query';
 import { Leaf, Phone, CloudSun, Menu, Search, User, LogOut } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AgroConnectLogo } from './agroconnect-logo';
 
 interface WeatherData {
   temperature: number;
@@ -74,8 +75,8 @@ export function Header() {
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-8">
               <Link href="/" className="flex items-center space-x-3" data-testid="logo-link">
-                <Leaf className="text-forest-green text-3xl" />
-                <h1 className="text-2xl font-bold text-forest-green">AgroConnect</h1>
+                <AgroConnectLogo className="w-10 h-10" />
+                <h1 className="text-2xl font-bold text-forest-green">FarmConnect Ghana</h1>
               </Link>
               
               <nav className="hidden md:flex items-center space-x-6">

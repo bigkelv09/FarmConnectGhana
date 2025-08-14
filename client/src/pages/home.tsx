@@ -1,11 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
 import { SellerCard } from "@/components/seller-card";
 import { WeatherWidget } from "@/components/weather-widget";
+import { AgroConnectLogo } from "@/components/agroconnect-logo";
+import { AuthModal } from "@/components/auth-modal";
+import { useAuth } from "@/lib/auth";
 import {
   Users,
   Package,
@@ -16,7 +20,9 @@ import {
   TrendingUp,
   Leaf,
   Shield,
-  Truck
+  Truck,
+  LogIn,
+  UserPlus
 } from "lucide-react";
 
 interface StatsData {
@@ -54,6 +60,10 @@ interface User {
 }
 
 export default function Home() {
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
   // Fetch platform stats
   const { data: stats } = useQuery<StatsData>({
     queryKey: ['platform-stats'],
@@ -99,6 +109,43 @@ export default function Home() {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-green-600 to-green-700 text-white py-20">
         <div className="container mx-auto px-4 text-center">
+          {/* Logo and Login/Register buttons */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center space-x-3">
+              <AgroConnectLogo className="w-16 h-16" />
+              <h1 className="text-2xl font-bold text-white">FarmConnect Ghana</h1>
+            </div>
+
+            {!user && (
+              <div className="flex items-center space-x-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-white border-white hover:bg-white hover:text-green-700"
+                  onClick={() => {
+                    setAuthMode('login');
+                    setShowAuthModal(true);
+                  }}
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="text-green-700"
+                  onClick={() => {
+                    setAuthMode('register');
+                    setShowAuthModal(true);
+                  }}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Register
+                </Button>
+              </div>
+            )}
+          </div>
+
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Connect Ghana's Farmers
           </h1>
@@ -119,6 +166,14 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode={authMode}
+        onModeChange={setAuthMode}
+      />
 
       {/* Stats Section */}
       <section className="py-16 bg-white">
