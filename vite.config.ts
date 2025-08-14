@@ -33,6 +33,17 @@ export default defineConfig(async () => {
     build: {
       outDir: path.resolve(import.meta.dirname, "dist/public"),
       emptyOutDir: true,
+      chunkSizeWarningLimit: 1000, // Increase chunk size warning limit to 1000kb
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            ui: ['@radix-ui/react-select', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+            icons: ['lucide-react'],
+            utils: ['clsx', 'tailwind-merge']
+          }
+        }
+      }
     },
     server: {
       fs: {

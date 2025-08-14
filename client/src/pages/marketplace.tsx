@@ -43,9 +43,18 @@ export default function Marketplace() {
   const { data: products = [], isLoading, error } = useQuery<Product[]>({
     queryKey: ['/api/products', buildQueryParams()],
     queryFn: async () => {
-      const response = await fetch(`/api/products?${buildQueryParams()}`);
-      if (!response.ok) throw new Error('Failed to fetch products');
-      return response.json();
+      try {
+        const response = await fetch(`/api/products?${buildQueryParams()}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Products loaded:', data); // Debug log
+        return data;
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        throw error;
+      }
     },
   });
 
@@ -65,9 +74,8 @@ export default function Marketplace() {
 
   const filteredAndSortedProducts = products
     .filter(product => {
-      const matchesPrice = (!searchParams.minPrice || parseFloat(product.price) >= parseFloat(searchParams.minPrice)) &&
-                          (!searchParams.maxPrice || parseFloat(product.price) <= parseFloat(searchParams.maxPrice));
-      return matchesPrice;
+      return (!searchParams.minPrice || parseFloat(product.price) >= parseFloat(searchParams.minPrice)) &&
+             (!searchParams.maxPrice || parseFloat(product.price) <= parseFloat(searchParams.maxPrice));
     })
     .sort((a, b) => {
       switch (searchParams.sortBy) {
@@ -83,15 +91,26 @@ export default function Marketplace() {
       }
     });
 
+  console.log('Marketplace rendering:', { products, isLoading, error }); // Debug log
+
   return (
-    <div className="min-h-screen bg-light-green">
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
       <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Marketplace</h1>
+
+        {/* Debug info */}
+        <div className="mb-4 p-4 bg-blue-100 rounded">
+          <p>Debug: Products count: {products.length}</p>
+          <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
+          <p>Error: {error ? String(error) : 'None'}</p>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
           <div className="lg:w-1/4">
-            <Card className="sticky top-24" data-testid="filters-card">
+            <Card className="sticky top-24">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Filter className="w-5 h-5 mr-2" />
@@ -131,25 +150,6 @@ export default function Marketplace() {
                   </Select>
                 </div>
 
-                {/* Price Range */}
-                <div>
-                  <Label>Price Range (GH₵)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={searchParams.minPrice}
-                      onChange={(e) => handleSearchChange('minPrice', e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={searchParams.maxPrice}
-                      onChange={(e) => handleSearchChange('maxPrice', e.target.value)}
-                    />
-                  </div>
-                </div>
-
                 {/* Clear Filters */}
                 <Button
                   variant="outline"
@@ -173,31 +173,22 @@ export default function Marketplace() {
 
           {/* Main Content */}
           <div className="lg:w-3/4">
-            {/* Header with sort */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
-                <p className="text-gray-600 mt-1">
-                  {filteredAndSortedProducts.length} product(s) found
-                </p>
-              </div>
+            <div className="flex justify-between items-center mb-6">
+              <p className="text-gray-600">
+                {filteredAndSortedProducts.length} product(s) found
+              </p>
 
-              <div className="flex items-center gap-2">
-                <Label htmlFor="sort" className="text-sm font-medium">
-                  Sort by:
-                </Label>
-                <Select value={searchParams.sortBy} onValueChange={(value) => handleSearchChange('sortBy', value)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="name">Name: A to Z</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={searchParams.sortBy} onValueChange={(value) => handleSearchChange('sortBy', value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="name">Name: A to Z</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Loading State */}
@@ -211,7 +202,7 @@ export default function Marketplace() {
             {/* Error State */}
             {error && (
               <div className="text-center py-12">
-                <p className="text-red-600">Failed to load products. Please try again.</p>
+                <p className="text-red-600">Error: {String(error)}</p>
                 <Button
                   variant="outline"
                   onClick={() => window.location.reload()}
@@ -233,14 +224,11 @@ export default function Marketplace() {
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                      <Search className="h-16 w-16 mx-auto" />
-                    </div>
                     <h3 className="text-xl font-semibold text-gray-700 mb-2">
                       No products found
                     </h3>
                     <p className="text-gray-500 mb-4">
-                      Try adjusting your search criteria or filters
+                      {products.length === 0 ? 'No products available' : 'Try adjusting your search criteria or filters'}
                     </p>
                     <Button
                       variant="outline"
