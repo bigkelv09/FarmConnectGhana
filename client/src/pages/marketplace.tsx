@@ -70,8 +70,14 @@ export default function Marketplace() {
 
   const filteredAndSortedProducts = products
     .filter(product => {
-      return (!searchParams.minPrice || parseFloat(product.price) >= parseFloat(searchParams.minPrice)) &&
-             (!searchParams.maxPrice || parseFloat(product.price) <= parseFloat(searchParams.maxPrice));
+      // Category filter
+      const matchesCategory = !searchParams.category || product.category === searchParams.category;
+
+      // Price filter
+      const matchesPrice = (!searchParams.minPrice || parseFloat(product.price) >= parseFloat(searchParams.minPrice)) &&
+                          (!searchParams.maxPrice || parseFloat(product.price) <= parseFloat(searchParams.maxPrice));
+
+      return matchesCategory && matchesPrice;
     })
     .sort((a, b) => {
       switch (searchParams.sortBy) {
