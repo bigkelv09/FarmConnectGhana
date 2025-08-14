@@ -1,5 +1,5 @@
 import { type User, type InsertUser, type Product, type InsertProduct, type Message, type InsertMessage } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 
 export interface IStorage {
   // User operations
