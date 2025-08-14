@@ -253,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         humidity: weatherData.main.humidity,
         description: weatherData.weather[0].description,
         windSpeed: Math.round(weatherData.wind.speed * 3.6), // Convert m/s to km/h
-        rainfall: 0, // Mock rainfall data
+        rainfall: weatherData.rain ? Math.round(weatherData.rain['1h'] || 0) : 0, // Real rainfall data from API
       });
     } catch (error) {
       console.error("Weather API error:", error);
@@ -296,12 +296,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const allUsers = Array.from(storage['users'].values());
       const allProducts = Array.from(storage['products'].values());
-      
+      const allMessages = Array.from(storage['messages'].values());
+
+      // Calculate actual transactions from messages (inquiries that led to communication)
+      const uniqueConversations = new Set();
+      allMessages.forEach(msg => {
+        const conversationKey = [msg.senderId, msg.receiverId].sort().join('-');
+        uniqueConversations.add(conversationKey);
+      });
+
       res.json({
         users: allUsers.length,
         products: allProducts.filter(p => p.active).length,
-        transactions: 8750, // Mock data
-        regions: 16 // Ghana has 16 regions
+        transactions: uniqueConversations.size, // Real conversation count as proxy for transactions
+        regions: new Set(allUsers.map(u => u.location?.split(',').pop()?.trim()).filter(Boolean)).size // Count unique regions from user locations
       });
     } catch (error) {
       console.error("Get stats error:", error);

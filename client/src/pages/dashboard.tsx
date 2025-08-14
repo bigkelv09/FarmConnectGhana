@@ -70,12 +70,12 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
-  // Mock dashboard stats (you can implement real stats later)
+  // Real dashboard stats based on actual data
   const dashboardStats: DashboardStats = {
     totalProducts: products.length,
     activeProducts: products.filter(p => p.active).length,
-    totalViews: products.length * 23, // Mock data
-    totalInquiries: products.length * 5, // Mock data
+    totalViews: 0, // Will be implemented when we add view tracking
+    totalInquiries: 0, // Will be implemented when we add message tracking for this user
   };
 
   // Create product mutation
