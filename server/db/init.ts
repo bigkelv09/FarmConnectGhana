@@ -55,6 +55,17 @@ export async function initializeDatabase() {
       console.log("Quantity column already exists or migration failed:", error);
     }
 
+    // Migration: Add unit column if it doesn't exist
+    try {
+      await db.execute(sql`
+        ALTER TABLE products 
+        ADD COLUMN IF NOT EXISTS unit TEXT NOT NULL DEFAULT '';
+      `);
+      console.log("Migration: Added unit column to products table");
+    } catch (error) {
+      console.log("Unit column already exists or migration failed:", error);
+    }
+
     // Create messages table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS messages (
