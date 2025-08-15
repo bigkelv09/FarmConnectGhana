@@ -65,9 +65,7 @@ export function AuthModal({ isOpen = true, onClose, mode = 'login', onModeChange
       email: '',
       password: '',
       confirmPassword: '',
-      firstName: '',
-      lastName: '',
-      accountType: 'buyer',
+      name: '',
       location: '',
       phone: '',
     },
@@ -201,34 +199,19 @@ export function AuthModal({ isOpen = true, onClose, mode = 'login', onModeChange
         {activeTab === 'register' && (
           <Form {...registerForm}>
             <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4" data-testid="register-form">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={registerForm.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="First name" {...field} data-testid="register-firstName" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={registerForm.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Last name" {...field} data-testid="register-lastName" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={registerForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your full name" {...field} data-testid="register-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={registerForm.control}
                 name="email"
@@ -243,27 +226,6 @@ export function AuthModal({ isOpen = true, onClose, mode = 'login', onModeChange
                         data-testid="register-email"
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={registerForm.control}
-                name="accountType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="register-accountType">
-                          <SelectValue placeholder="Select account type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="farmer">Farmer/Seller</SelectItem>
-                        <SelectItem value="buyer">Buyer</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
