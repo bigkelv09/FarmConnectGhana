@@ -479,17 +479,6 @@ export default function Dashboard() {
 
           {activeTab === 'products' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold">My Products</h2>
-                  <p className="text-gray-600">Manage your product listings and inventory</p>
-                </div>
-                <Button onClick={handleAddProduct}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Product
-                </Button>
-              </div>
-
               {productsLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...Array(6)].map((_, i) => (
