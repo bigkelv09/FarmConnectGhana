@@ -202,6 +202,9 @@ export default function Dashboard() {
   });
 
   const onSubmit = (data: ProductFormData) => {
+    console.log('Form submitted with data:', data);
+    console.log('Form validation errors:', form.formState.errors);
+
     if (editingProduct) {
       updateProductMutation.mutate(data);
     } else {
@@ -615,6 +618,31 @@ export default function Dashboard() {
                             <FormControl>
                               <Input placeholder="City, Region" {...field} />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="crops">Crops</SelectItem>
+                                <SelectItem value="livestock">Livestock</SelectItem>
+                                <SelectItem value="farm-tools">Farm Tools</SelectItem>
+                                <SelectItem value="seeds">Seeds</SelectItem>
+                                <SelectItem value="fertilizers">Fertilizers</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
