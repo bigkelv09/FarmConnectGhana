@@ -20,6 +20,7 @@ import { Plus, Edit, Trash2, Package, DollarSign, TrendingUp, Users } from 'luci
 
 const productFormSchema = insertProductSchema.extend({
   price: z.string().min(1, 'Price is required'),
+  quantity: z.string().min(1, 'Quantity is required'),
   stock: z.string().min(0, 'Stock is required').optional(),
 });
 
@@ -31,6 +32,8 @@ interface Product {
   description: string;
   price: string;
   category: string;
+  quantity: number;
+  unit: string;
   location: string;
   imageUrl?: string;
   sellerId: string;
@@ -87,6 +90,8 @@ export default function Dashboard() {
         description: data.description,
         category: data.category,
         price: data.price, // Keep as string, backend will handle conversion
+        quantity: data.quantity, // Keep as string, backend will handle conversion
+        unit: data.unit,
         stock: data.stock ? parseInt(data.stock) : 0,
         location: data.location || '',
         imageUrl: data.imageUrl || '',
@@ -183,8 +188,11 @@ export default function Dashboard() {
       description: '',
       price: '',
       category: '',
+      quantity: '',
+      unit: '',
       location: '',
       imageUrl: '',
+      stock: '',
     },
   });
 
@@ -203,6 +211,8 @@ export default function Dashboard() {
       description: product.description,
       price: product.price,
       category: product.category,
+      quantity: product.quantity.toString(),
+      unit: product.unit,
       location: product.location,
       imageUrl: product.imageUrl,
       stock: product.stock?.toString(),
@@ -235,7 +245,9 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Seller Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome, {user?.name || 'Seller'}
+          </h1>
           <p className="text-gray-600">Manage your products and track your performance</p>
         </div>
 
@@ -530,20 +542,42 @@ export default function Dashboard() {
 
                       <FormField
                         control={form.control}
-                        name="category"
+                        name="quantity"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Category</FormLabel>
+                            <FormLabel>Quantity</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="e.g., 50" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="unit"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Unit</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select category" />
+                                  <SelectValue placeholder="Select unit" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="crops">Crops</SelectItem>
-                                <SelectItem value="tools">Tools</SelectItem>
-                                <SelectItem value="medications">Medications</SelectItem>
+                                <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                                <SelectItem value="g">Grams (g)</SelectItem>
+                                <SelectItem value="lbs">Pounds (lbs)</SelectItem>
+                                <SelectItem value="tons">Tons</SelectItem>
+                                <SelectItem value="bags">Bags</SelectItem>
+                                <SelectItem value="boxes">Boxes</SelectItem>
+                                <SelectItem value="pieces">Pieces</SelectItem>
+                                <SelectItem value="liters">Liters</SelectItem>
+                                <SelectItem value="gallons">Gallons</SelectItem>
+                                <SelectItem value="bunches">Bunches</SelectItem>
+                                <SelectItem value="dozen">Dozen</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -558,9 +592,9 @@ export default function Dashboard() {
                         name="stock"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Stock</FormLabel>
+                            <FormLabel>Available Stock</FormLabel>
                             <FormControl>
-                              <Input type="number" placeholder="Available stock" {...field} />
+                              <Input type="number" placeholder="Stock quantity" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

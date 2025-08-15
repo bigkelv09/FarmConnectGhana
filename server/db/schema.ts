@@ -23,6 +23,8 @@ export const products = pgTable("products", {
   description: text("description").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   category: text("category").notNull(),
+  quantity: integer("quantity").notNull(),
+  unit: text("unit").notNull(),
   imageUrl: text("image_url"),
   sellerId: uuid("seller_id").references(() => users.id).notNull(),
   stock: integer("stock").default(0),

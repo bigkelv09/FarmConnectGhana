@@ -213,7 +213,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const productData = insertProductSchema.parse(req.body);
+      // Transform the data to match the schema before validation
+      const requestData = {
+        ...req.body,
+        price: parseFloat(req.body.price), // Convert string to number
+        quantity: parseInt(req.body.quantity), // Convert string to number
+        stock: req.body.stock ? parseInt(req.body.stock) : 0, // Convert string to number or default to 0
+      };
+
+      const productData = insertProductSchema.parse(requestData);
       const [product] = await db.insert(products).values({
         ...productData,
         sellerId: req.user.id,
@@ -221,6 +229,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(product);
     } catch (error) {
       console.error("Create product error:", error);
+      // More detailed error logging to help debug
+      if (error instanceof Error) {
+        console.error("Error details:", error.message);
+      }
       res.status(400).json({ message: "Invalid product data" });
     }
   });

@@ -14,6 +14,8 @@ export const insertProductSchema = z.object({
   description: z.string().min(1, "Description is required"),
   category: z.enum(["crops", "livestock", "farm-tools", "seeds", "fertilizers"]),
   price: z.number().positive("Price must be positive"),
+  quantity: z.number().int().min(1, "Quantity must be at least 1"),
+  unit: z.string().min(1, "Unit of measurement is required"),
   stock: z.number().int().min(0, "Stock must be non-negative").optional(),
   location: z.string().min(1, "Location is required"),
   imageUrl: z.string().url().optional().or(z.literal("")),
