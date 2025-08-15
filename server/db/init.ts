@@ -32,6 +32,8 @@ export async function initializeDatabase() {
         description TEXT NOT NULL,
         price DECIMAL(10,2) NOT NULL,
         category TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        unit TEXT NOT NULL,
         image_url TEXT,
         seller_id UUID REFERENCES users(id) NOT NULL,
         stock INTEGER DEFAULT 0,
