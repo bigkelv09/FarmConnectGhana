@@ -392,57 +392,7 @@ export default function Dashboard() {
               </div>
 
               {/* Quick Actions */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Recent Products</CardTitle>
-                    <CardDescription>Your latest product listings</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {productsLoading ? (
-                      <div className="space-y-4">
-                        {[...Array(3)].map((_, i) => (
-                          <div key={i} className="flex items-center space-x-4 animate-pulse">
-                            <div className="w-16 h-16 bg-gray-200 rounded" />
-                            <div className="flex-1">
-                              <div className="h-4 bg-gray-200 rounded mb-2" />
-                              <div className="h-3 bg-gray-200 rounded" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : products.length > 0 ? (
-                      <div className="space-y-4">
-                        {products.slice(0, 5).map((product) => (
-                          <div key={product.id} className="flex items-center space-x-4">
-                            <img
-                              src={product.imageUrl || '/placeholder.png'}
-                              alt={product.name}
-                              className="w-16 h-16 object-cover rounded"
-                            />
-                            <div className="flex-1">
-                              <h4 className="font-medium">{product.name}</h4>
-                              <p className="text-sm text-gray-600">GH₵{product.price} per {product.unit}</p>
-                            </div>
-                            <Badge variant="default">
-                              Active
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">No products listed yet</p>
-                        <Button onClick={handleAddProduct} className="mt-4">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Your First Product
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
@@ -481,6 +431,46 @@ export default function Dashboard() {
                       <User className="w-4 h-4 mr-2" />
                       Update Profile
                     </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Farm Activity</CardTitle>
+                    <CardDescription>Recent activity on your farm</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <Package className="w-4 h-4 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Products listed: {dashboardStats.totalProducts}</p>
+                          <p className="text-xs text-gray-600">Total products in your inventory</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <TrendingUp className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Active listings: {dashboardStats.activeProducts}</p>
+                          <p className="text-xs text-gray-600">Products currently available for sale</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                          <Calendar className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Account created</p>
+                          <p className="text-xs text-gray-600">Welcome to FarmConnect Ghana!</p>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
