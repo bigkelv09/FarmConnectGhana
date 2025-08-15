@@ -44,6 +44,17 @@ export async function initializeDatabase() {
       );
     `);
 
+    // Migration: Add quantity column if it doesn't exist
+    try {
+      await db.execute(sql`
+        ALTER TABLE products 
+        ADD COLUMN IF NOT EXISTS quantity INTEGER NOT NULL DEFAULT 0;
+      `);
+      console.log("Migration: Added quantity column to products table");
+    } catch (error) {
+      console.log("Quantity column already exists or migration failed:", error);
+    }
+
     // Create messages table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS messages (
