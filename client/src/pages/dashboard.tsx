@@ -3,7 +3,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,11 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
 import { z } from 'zod';
-import { Plus, Edit, Trash2, Package, DollarSign, TrendingUp, Users } from 'lucide-react';
+import {
+  Plus, Edit, Trash2, Package, DollarSign, TrendingUp, Users,
+  Home, ShoppingBag, MessageSquare, Settings, LogOut, BarChart3,
+  User, MapPin, Bell, Star, Calendar
+} from 'lucide-react';
 
 const productFormSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
@@ -55,10 +58,22 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Navigation items
+  const navigationItems = [
+    { id: 'overview', label: 'Overview', icon: Home },
+    { id: 'products', label: 'My Products', icon: Package },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'messages', label: 'Messages', icon: MessageSquare },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
 
   // Fetch user's products
   const { data: products = [], isLoading: productsLoading, refetch } = useQuery<Product[]>({
@@ -250,228 +265,336 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome, {user?.name || 'Seller'}
-          </h1>
-          <p className="text-gray-600">Manage your products and track your performance</p>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar Navigation */}
+      <div className="w-64 bg-white shadow-lg border-r border-gray-200 fixed h-full">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">{user?.name}</h3>
+              <p className="text-sm text-gray-600">Farmer</p>
+            </div>
+          </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="products">My Products</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+        <nav className="mt-6 px-3">
+          <div className="space-y-1">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    activeTab === item.id
+                      ? 'bg-green-100 text-green-700 border-r-2 border-green-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="mr-3 h-5 w-5" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                  <Package className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{dashboardStats.totalProducts}</div>
-                  <p className="text-xs text-muted-foreground">Products listed</p>
-                </CardContent>
-              </Card>
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200">
+          <button
+            onClick={logout}
+            className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <LogOut className="mr-3 h-5 w-5" />
+            Sign Out
+          </button>
+        </div>
+      </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Products</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{dashboardStats.activeProducts}</div>
-                  <p className="text-xs text-muted-foreground">Currently available</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{dashboardStats.totalViews}</div>
-                  <p className="text-xs text-muted-foreground">Product views</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Inquiries</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{dashboardStats.totalInquiries}</div>
-                  <p className="text-xs text-muted-foreground">Customer inquiries</p>
-                </CardContent>
-              </Card>
+      {/* Main Content */}
+      <div className="flex-1 ml-64">
+        <div className="p-8">
+          {/* Header */}
+          <div className="mb-8 flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {navigationItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
+              </h1>
+              <p className="text-gray-600 mt-1">
+                {activeTab === 'overview' && 'Track your performance and manage your farm business'}
+                {activeTab === 'products' && 'Manage your product listings and inventory'}
+                {activeTab === 'analytics' && 'View detailed insights and performance metrics'}
+                {activeTab === 'messages' && 'Communicate with buyers and other farmers'}
+                {activeTab === 'orders' && 'Track and manage your orders'}
+                {activeTab === 'profile' && 'Update your profile and farm information'}
+                {activeTab === 'settings' && 'Configure your account preferences'}
+              </p>
             </div>
 
-            {/* Recent Products */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Products</CardTitle>
-                <CardDescription>Your latest product listings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {productsLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="flex items-center space-x-4 animate-pulse">
-                        <div className="w-16 h-16 bg-gray-200 rounded" />
-                        <div className="flex-1">
-                          <div className="h-4 bg-gray-200 rounded mb-2" />
-                          <div className="h-3 bg-gray-200 rounded" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : products.length > 0 ? (
-                  <div className="space-y-4">
-                    {products.slice(0, 5).map((product) => (
-                      <div key={product.id} className="flex items-center space-x-4">
-                        <img
-                          src={product.imageUrl || '/placeholder.png'}
-                          alt={product.name}
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                        <div className="flex-1">
-                          <h4 className="font-medium">{product.name}</h4>
-                          <p className="text-sm text-gray-600">GH₵{product.price} per {product.unit}</p>
-                        </div>
-                        <Badge variant={product.active ? "default" : "secondary"}>
-                          {product.active ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No products listed yet</p>
-                    <Button onClick={handleAddProduct} className="mt-4">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Your First Product
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="products" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">My Products</h2>
-                <p className="text-gray-600">Manage your product listings</p>
-              </div>
-              <Button onClick={handleAddProduct}>
+            {activeTab === 'products' && (
+              <Button onClick={handleAddProduct} className="bg-green-600 hover:bg-green-700">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
               </Button>
-            </div>
+            )}
+          </div>
 
-            {productsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <div className="h-48 bg-gray-200" />
-                    <CardContent className="p-4">
-                      <div className="h-4 bg-gray-200 rounded mb-2" />
-                      <div className="h-3 bg-gray-200 rounded mb-4" />
-                      <div className="h-8 bg-gray-200 rounded" />
-                    </CardContent>
-                  </Card>
-                ))}
+          {/* Content Area */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{dashboardStats.totalProducts}</div>
+                    <p className="text-xs text-muted-foreground">Products listed</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Products</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{dashboardStats.activeProducts}</div>
+                    <p className="text-xs text-muted-foreground">Currently available</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{dashboardStats.totalViews}</div>
+                    <p className="text-xs text-muted-foreground">Product views</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Inquiries</CardTitle>
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{dashboardStats.totalInquiries}</div>
+                    <p className="text-xs text-muted-foreground">Customer inquiries</p>
+                  </CardContent>
+                </Card>
               </div>
-            ) : products.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
-                  <Card key={product.id} className="overflow-hidden">
-                    <div className="h-48 bg-cover bg-center relative">
-                      <img
-                        src={product.imageUrl || '/placeholder.png'}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <Badge
-                        className="absolute top-2 right-2"
-                        variant={product.active ? "default" : "secondary"}
-                      >
-                        {product.active ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-lg font-bold text-green-600">
-                          GH₵{product.price}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {product.stock} {product.unit}
-                        </span>
+
+              {/* Quick Actions */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Recent Products</CardTitle>
+                    <CardDescription>Your latest product listings</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {productsLoading ? (
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="flex items-center space-x-4 animate-pulse">
+                            <div className="w-16 h-16 bg-gray-200 rounded" />
+                            <div className="flex-1">
+                              <div className="h-4 bg-gray-200 rounded mb-2" />
+                              <div className="h-3 bg-gray-200 rounded" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditProduct(product)}
-                          className="flex-1"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Edit
+                    ) : products.length > 0 ? (
+                      <div className="space-y-4">
+                        {products.slice(0, 5).map((product) => (
+                          <div key={product.id} className="flex items-center space-x-4">
+                            <img
+                              src={product.imageUrl || '/placeholder.png'}
+                              alt={product.name}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-medium">{product.name}</h4>
+                              <p className="text-sm text-gray-600">GH₵{product.price} per {product.unit}</p>
+                            </div>
+                            <Badge variant="default">
+                              Active
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">No products listed yet</p>
+                        <Button onClick={handleAddProduct} className="mt-4">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Your First Product
                         </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Product</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{product.name}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteProduct(product.id)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>Common tasks</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button
+                      onClick={handleAddProduct}
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add New Product
+                    </Button>
+                    <Button
+                      onClick={() => setActiveTab('messages')}
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      View Messages
+                    </Button>
+                    <Button
+                      onClick={() => setActiveTab('analytics')}
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      View Analytics
+                    </Button>
+                    <Button
+                      onClick={() => setActiveTab('profile')}
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Update Profile
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <Package className="w-24 h-24 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No products yet</h3>
-                <p className="text-gray-500 mb-6">Start selling by adding your first product</p>
+            </div>
+          )}
+
+          {activeTab === 'products' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold">My Products</h2>
+                  <p className="text-gray-600">Manage your product listings and inventory</p>
+                </div>
                 <Button onClick={handleAddProduct}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Product
+                  Add Product
                 </Button>
               </div>
-            )}
-          </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-6">
+              {productsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <Card key={i} className="animate-pulse">
+                      <div className="h-48 bg-gray-200" />
+                      <CardContent className="p-4">
+                        <div className="h-4 bg-gray-200 rounded mb-2" />
+                        <div className="h-3 bg-gray-200 rounded mb-4" />
+                        <div className="h-8 bg-gray-200 rounded" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : products.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products.map((product) => (
+                    <Card key={product.id} className="overflow-hidden">
+                      <div className="h-48 bg-cover bg-center relative">
+                        <img
+                          src={product.imageUrl || '/placeholder.png'}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <Badge
+                          className="absolute top-2 right-2"
+                          variant={product.active ? "default" : "secondary"}
+                        >
+                          {product.active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-lg font-bold text-green-600">
+                            GH₵{product.price}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {product.stock} {product.unit}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditProduct(product)}
+                            className="flex-1"
+                          >
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{product.name}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteProduct(product.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Package className="w-24 h-24 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">No products yet</h3>
+                  <p className="text-gray-500 mb-6">Start selling by adding your first product</p>
+                  <Button onClick={handleAddProduct}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Your First Product
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
             <Card>
               <CardHeader>
                 <CardTitle>Analytics</CardTitle>
@@ -487,211 +610,211 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Product Form Dialog */}
-        {isFormOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <CardHeader>
-                <CardTitle>
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
-                </CardTitle>
-                <CardDescription>
-                  {editingProduct ? 'Update your product details' : 'Fill in the details for your new product'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Product Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter product name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="Describe your product" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="price"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Price (GH₵)</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.01" placeholder="0.00" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="quantity"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Quantity</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="e.g., 50" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="unit"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Unit</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select unit" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="kg">Kilograms (kg)</SelectItem>
-                                <SelectItem value="g">Grams (g)</SelectItem>
-                                <SelectItem value="lbs">Pounds (lbs)</SelectItem>
-                                <SelectItem value="tons">Tons</SelectItem>
-                                <SelectItem value="bags">Bags</SelectItem>
-                                <SelectItem value="boxes">Boxes</SelectItem>
-                                <SelectItem value="pieces">Pieces</SelectItem>
-                                <SelectItem value="liters">Liters</SelectItem>
-                                <SelectItem value="gallons">Gallons</SelectItem>
-                                <SelectItem value="bunches">Bunches</SelectItem>
-                                <SelectItem value="dozen">Dozen</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="stock"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Available Stock</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="Stock quantity" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="location"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Location</FormLabel>
-                            <FormControl>
-                              <Input placeholder="City, Region" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select category" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="crops">Crops</SelectItem>
-                                <SelectItem value="livestock">Livestock</SelectItem>
-                                <SelectItem value="farm-tools">Farm Tools</SelectItem>
-                                <SelectItem value="seeds">Seeds</SelectItem>
-                                <SelectItem value="fertilizers">Fertilizers</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="imageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Image URL</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com/image.jpg" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex gap-4 pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsFormOpen(false)}
-                        className="flex-1"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={createProductMutation.isPending || updateProductMutation.isPending}
-                        className="flex-1"
-                      >
-                        {createProductMutation.isPending || updateProductMutation.isPending
-                          ? 'Saving...'
-                          : editingProduct
-                          ? 'Update Product'
-                          : 'Create Product'
-                        }
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Product Form Dialog */}
+      {isFormOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <CardTitle>
+                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              </CardTitle>
+              <CardDescription>
+                {editingProduct ? 'Update your product details' : 'Fill in the details for your new product'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter product name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Describe your product" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Price (GH₵)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quantity</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="e.g., 50" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="unit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Unit</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select unit" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                              <SelectItem value="g">Grams (g)</SelectItem>
+                              <SelectItem value="lbs">Pounds (lbs)</SelectItem>
+                              <SelectItem value="tons">Tons</SelectItem>
+                              <SelectItem value="bags">Bags</SelectItem>
+                              <SelectItem value="boxes">Boxes</SelectItem>
+                              <SelectItem value="pieces">Pieces</SelectItem>
+                              <SelectItem value="liters">Liters</SelectItem>
+                              <SelectItem value="gallons">Gallons</SelectItem>
+                              <SelectItem value="bunches">Bunches</SelectItem>
+                              <SelectItem value="dozen">Dozen</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="stock"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Available Stock</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="Stock quantity" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location</FormLabel>
+                          <FormControl>
+                            <Input placeholder="City, Region" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="crops">Crops</SelectItem>
+                              <SelectItem value="livestock">Livestock</SelectItem>
+                              <SelectItem value="farm-tools">Farm Tools</SelectItem>
+                              <SelectItem value="seeds">Seeds</SelectItem>
+                              <SelectItem value="fertilizers">Fertilizers</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="imageUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Image URL</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://example.com/image.jpg" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex gap-4 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsFormOpen(false)}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createProductMutation.isPending || updateProductMutation.isPending}
+                      className="flex-1"
+                    >
+                      {createProductMutation.isPending || updateProductMutation.isPending
+                        ? 'Saving...'
+                        : editingProduct
+                        ? 'Update Product'
+                        : 'Create Product'
+                      }
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
