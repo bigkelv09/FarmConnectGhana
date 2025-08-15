@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,7 @@ import { z } from 'zod';
 import {
   Plus, Edit, Trash2, Package, DollarSign, TrendingUp, Users,
   Home, ShoppingBag, MessageSquare, Settings, LogOut, BarChart3,
-  User, MapPin, Bell, Star, Calendar
+  User, MapPin, Bell, Star, Calendar, ExternalLink
 } from 'lucide-react';
 
 const productFormSchema = z.object({
@@ -60,6 +61,7 @@ interface DashboardStats {
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -408,6 +410,14 @@ export default function Dashboard() {
                       Add New Product
                     </Button>
                     <Button
+                      onClick={() => setLocation('/marketplace')}
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <ShoppingBag className="w-4 h-4 mr-2" />
+                      Browse Marketplace
+                    </Button>
+                    <Button
                       onClick={() => setActiveTab('messages')}
                       className="w-full justify-start"
                       variant="outline"
@@ -479,6 +489,7 @@ export default function Dashboard() {
 
           {activeTab === 'products' && (
             <div className="space-y-6">
+
               {productsLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...Array(6)].map((_, i) => (
