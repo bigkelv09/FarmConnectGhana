@@ -30,7 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     // Check if user is logged in on app start
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth-token');
     if (token) {
       fetchUser();
     } else {
@@ -44,7 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userData = await response.json();
       setUser(userData);
     } catch (error) {
-      localStorage.removeItem('token');
+      localStorage.removeItem('auth-token');
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const response = await apiRequest('POST', '/api/auth/login', { email, password });
     const { user, token } = await response.json();
     
-    localStorage.setItem('token', token);
+    localStorage.setItem('auth-token', token);
     setUser(user);
   };
 
@@ -62,12 +62,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const response = await apiRequest('POST', '/api/auth/register', userData);
     const { user, token } = await response.json();
     
-    localStorage.setItem('token', token);
+    localStorage.setItem('auth-token', token);
     setUser(user);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('auth-token');
     setUser(null);
   };
 
