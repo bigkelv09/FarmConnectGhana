@@ -380,7 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         users: allUsers.length,
-        products: allProducts.filter(p => p.active).length,
+        products: allProducts.length, // Count all products in the database
         transactions: uniqueConversations.size, // Real conversation count as proxy for transactions
         regions: new Set(allUsers.map(u => u.location?.split(',').pop()?.trim()).filter(Boolean)).size // Count unique regions from user locations
       });
@@ -390,6 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get trusted sellers
   app.get("/api/users/trusted-sellers", async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 6;
@@ -398,6 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orderBy: desc(users.joinedAt),
         limit: limit,
       });
+      
+      // Remove password from response
       const sellersWithoutPassword = sellers.map(({ password, ...seller }) => seller);
       res.json(sellersWithoutPassword);
     } catch (error) {
