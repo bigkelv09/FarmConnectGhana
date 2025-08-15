@@ -3,7 +3,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { insertProductSchema } from '@shared/schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -18,10 +17,16 @@ import { queryClient } from '@/lib/queryClient';
 import { z } from 'zod';
 import { Plus, Edit, Trash2, Package, DollarSign, TrendingUp, Users } from 'lucide-react';
 
-const productFormSchema = insertProductSchema.extend({
+const productFormSchema = z.object({
+  name: z.string().min(1, 'Product name is required'),
+  description: z.string().min(1, 'Description is required'),
+  category: z.enum(["crops", "livestock", "farm-tools", "seeds", "fertilizers"]),
   price: z.string().min(1, 'Price is required'),
   quantity: z.string().min(1, 'Quantity is required'),
-  stock: z.string().min(0, 'Stock is required').optional(),
+  unit: z.string().min(1, 'Unit is required'),
+  location: z.string().min(1, 'Location is required'),
+  imageUrl: z.string().optional(),
+  stock: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productFormSchema>;
