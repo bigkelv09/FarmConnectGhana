@@ -80,19 +80,31 @@ export default function Dashboard() {
   const createProductMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
       const token = localStorage.getItem('auth-token');
+
+      // Transform the data to match the database schema
+      const productData = {
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        price: data.price, // Keep as string, backend will handle conversion
+        stock: data.stock ? parseInt(data.stock) : 0,
+        location: data.location || '',
+        imageUrl: data.imageUrl || '',
+      };
+
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...data,
-          price: parseFloat(data.price).toFixed(2),
-          stock: data.stock ? parseInt(data.stock) : undefined
-        }),
+        body: JSON.stringify(productData),
       });
-      if (!response.ok) throw new Error('Failed to create product');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create product');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -101,8 +113,13 @@ export default function Dashboard() {
       setIsFormOpen(false);
       form.reset();
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create product", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Product creation error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create product",
+        variant: "destructive"
+      });
     },
   });
 
