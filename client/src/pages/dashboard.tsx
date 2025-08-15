@@ -20,7 +20,7 @@ import { Plus, Edit, Trash2, Package, DollarSign, TrendingUp, Users } from 'luci
 
 const productFormSchema = insertProductSchema.extend({
   price: z.string().min(1, 'Price is required'),
-  quantity: z.string().min(1, 'Quantity is required'),
+  stock: z.string().min(0, 'Stock is required').optional(),
 });
 
 type ProductFormData = z.infer<typeof productFormSchema>;
@@ -30,14 +30,12 @@ interface Product {
   name: string;
   description: string;
   price: string;
-  unit: string;
-  quantity: number;
   category: string;
   location: string;
-  imageUrl: string;
+  imageUrl?: string;
   sellerId: string;
+  stock?: number;
   featured: boolean;
-  active: boolean;
   createdAt: string;
 }
 
@@ -91,7 +89,7 @@ export default function Dashboard() {
         body: JSON.stringify({
           ...data,
           price: parseFloat(data.price).toFixed(2),
-          quantity: parseInt(data.quantity)
+          stock: data.stock ? parseInt(data.stock) : undefined
         }),
       });
       if (!response.ok) throw new Error('Failed to create product');
@@ -121,7 +119,7 @@ export default function Dashboard() {
         body: JSON.stringify({
           ...data,
           price: parseFloat(data.price).toFixed(2),
-          quantity: parseInt(data.quantity)
+          stock: data.stock ? parseInt(data.stock) : undefined
         }),
       });
       if (!response.ok) throw new Error('Failed to update product');
@@ -167,8 +165,6 @@ export default function Dashboard() {
       name: '',
       description: '',
       price: '',
-      unit: '',
-      quantity: '',
       category: '',
       location: '',
       imageUrl: '',
@@ -189,11 +185,10 @@ export default function Dashboard() {
       name: product.name,
       description: product.description,
       price: product.price,
-      unit: product.unit,
-      quantity: product.quantity.toString(),
       category: product.category,
       location: product.location,
       imageUrl: product.imageUrl,
+      stock: product.stock?.toString(),
     });
     setIsFormOpen(true);
   };
@@ -384,7 +379,7 @@ export default function Dashboard() {
                           GH₵{product.price}
                         </span>
                         <span className="text-sm text-gray-500">
-                          {product.quantity} {product.unit}
+                          {product.stock} {product.unit}
                         </span>
                       </div>
                       <div className="flex gap-2">
@@ -518,47 +513,6 @@ export default function Dashboard() {
 
                       <FormField
                         control={form.control}
-                        name="unit"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Unit</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select unit" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="kg">Kilogram</SelectItem>
-                                <SelectItem value="bag">Bag</SelectItem>
-                                <SelectItem value="unit">Unit</SelectItem>
-                                <SelectItem value="ton">Ton</SelectItem>
-                                <SelectItem value="liter">Liter</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="quantity"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Quantity</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="Available quantity" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
                         name="category"
                         render={({ field }) => (
                           <FormItem>
@@ -581,19 +535,35 @@ export default function Dashboard() {
                       />
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Location</FormLabel>
-                          <FormControl>
-                            <Input placeholder="City, Region" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="stock"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Stock</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="Available stock" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Location</FormLabel>
+                            <FormControl>
+                              <Input placeholder="City, Region" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     <FormField
                       control={form.control}

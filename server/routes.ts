@@ -1,7 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { insertUserSchema, insertProductSchema, insertMessageSchema } from "@shared/schema";
+import { db } from "./db";
+import { users, products, messages } from "./db/schema";
+import { insertUserSchema, insertProductSchema, insertMessageSchema } from "./db/schema";
+import { eq, desc, and, or, ilike } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -61,7 +63,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userData = insertUserSchema.parse(req.body);
       
       // Check if user exists
-      const existingUser = await storage.getUserByEmail(userData.email);
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, userData.email),
+      });
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
@@ -70,11 +74,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
       
-      const user = await storage.createUser({
+      const [user] = await db.insert(users).values({
         ...userData,
         password: hashedPassword,
-      });
-      
+      }).returning();
+
       // Create JWT token
       const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
       
@@ -90,7 +94,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password } = req.body;
       
-      const user = await storage.getUserByEmail(email);
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, email),
+      });
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
@@ -116,7 +122,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const user = await storage.getUser(req.user.id);
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, req.user.id),
+      });
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -133,13 +141,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products", async (req, res) => {
     try {
       const { category, search, sellerId } = req.query;
-      const products = await storage.getProducts({
-        category: category as string,
-        search: search as string,
-        sellerId: sellerId as string,
+      const productsList = await db.query.products.findMany({
+        where: and(
+          category ? eq(products.category, category as string) : undefined,
+          search ? ilike(products.name, `%${search}%`) : undefined,
+          sellerId ? eq(products.sellerId, sellerId as string) : undefined
+        ),
       });
       
-      res.json(products);
+      res.json(productsList);
     } catch (error) {
       console.error("Get products error:", error);
       res.status(500).json({ message: "Server error" });
@@ -148,8 +158,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/products/featured", async (req, res) => {
     try {
-      const products = await storage.getFeaturedProducts();
-      res.json(products);
+      const productsList = await db.query.products.findMany({
+        where: eq(products.featured, true),
+      });
+      res.json(productsList);
     } catch (error) {
       console.error("Get featured products error:", error);
       res.status(500).json({ message: "Server error" });
@@ -159,8 +171,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/products/latest", async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 6;
-      const products = await storage.getLatestProducts(limit);
-      res.json(products);
+      const productsList = await db.query.products.findMany({
+        orderBy: desc(products.createdAt),
+        take: limit,
+      });
+      res.json(productsList);
     } catch (error) {
       console.error("Get latest products error:", error);
       res.status(500).json({ message: "Server error" });
@@ -169,13 +184,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/products/:id", async (req, res) => {
     try {
-      const product = await storage.getProduct(req.params.id);
+      const product = await db.query.products.findFirst({
+        where: eq(products.id, req.params.id),
+      });
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
       
       // Get seller info
-      const seller = await storage.getUser(product.sellerId);
+      const seller = await db.query.users.findFirst({
+        where: eq(users.id, product.sellerId),
+      });
       if (!seller) {
         return res.status(404).json({ message: "Seller not found" });
       }
@@ -195,7 +214,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const productData = insertProductSchema.parse(req.body);
-      const product = await storage.createProduct(req.user.id, productData);
+      const [product] = await db.insert(products).values({
+        ...productData,
+        sellerId: req.user.id,
+      }).returning();
       res.status(201).json(product);
     } catch (error) {
       console.error("Create product error:", error);
@@ -210,13 +232,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updates = req.body;
-      const product = await storage.updateProduct(req.params.id, req.user.id, updates);
-      
-      if (!product) {
+      const product = await db.query.products.findFirst({
+        where: eq(products.id, req.params.id),
+      });
+
+      if (!product || product.sellerId !== req.user.id) {
         return res.status(404).json({ message: "Product not found or access denied" });
       }
       
-      res.json(product);
+      const [updatedProduct] = await db.update(products)
+        .set(updates)
+        .where(eq(products.id, req.params.id))
+        .returning();
+
+      res.json(updatedProduct);
     } catch (error) {
       console.error("Update product error:", error);
       res.status(400).json({ message: "Invalid product data" });
@@ -229,12 +258,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const success = await storage.deleteProduct(req.params.id, req.user.id);
-      
-      if (!success) {
+      const product = await db.query.products.findFirst({
+        where: eq(products.id, req.params.id),
+      });
+
+      if (!product || product.sellerId !== req.user.id) {
         return res.status(404).json({ message: "Product not found or access denied" });
       }
       
+      await db.delete(products).where(eq(products.id, req.params.id));
+
       res.json({ message: "Product deleted successfully" });
     } catch (error) {
       console.error("Delete product error:", error);
@@ -268,8 +301,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const messages = await storage.getMessages(req.user.id);
-      res.json(messages);
+      const messagesList = await db.query.messages.findMany({
+        where: eq(messages.receiverId, req.user.id),
+      });
+      res.json(messagesList);
     } catch (error) {
       console.error("Get messages error:", error);
       res.status(500).json({ message: "Server error" });
@@ -283,7 +318,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const messageData = insertMessageSchema.parse(req.body);
-      const message = await storage.createMessage(req.user.id, messageData);
+      const [message] = await db.insert(messages).values({
+        ...messageData,
+        senderId: req.user.id,
+      }).returning();
       res.status(201).json(message);
     } catch (error) {
       console.error("Send message error:", error);
@@ -294,9 +332,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user stats
   app.get("/api/stats", async (req, res) => {
     try {
-      const allUsers = Array.from(storage['users'].values());
-      const allProducts = Array.from(storage['products'].values());
-      const allMessages = Array.from(storage['messages'].values());
+      const allUsers = await db.query.users.findMany();
+      const allProducts = await db.query.products.findMany();
+      const allMessages = await db.query.messages.findMany();
 
       // Calculate actual transactions from messages (inquiries that led to communication)
       const uniqueConversations = new Set();
@@ -320,7 +358,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/trusted-sellers", async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 6;
-      const sellers = await storage.getTrustedSellers(limit);
+      const sellers = await db.query.users.findMany({
+        where: eq(users.verified, true),
+        orderBy: desc(users.joinedAt),
+        limit: limit,
+      });
       const sellersWithoutPassword = sellers.map(({ password, ...seller }) => seller);
       res.json(sellersWithoutPassword);
     } catch (error) {

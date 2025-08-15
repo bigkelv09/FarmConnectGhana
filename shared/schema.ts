@@ -1,79 +1,69 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, integer, timestamp, boolean } from "drizzle-orm/pg-core";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  accountType: text("account_type", { enum: ["farmer", "buyer"] }).notNull(),
-  location: text("location"),
-  phone: text("phone"),
-  verified: boolean("verified").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+// Simplified schemas for frontend validation
+export const insertUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string().min(1),
+  location: z.string().optional(),
+  phone: z.string().optional(),
 });
 
-export const products = pgTable("products", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  sellerId: varchar("seller_id").notNull(),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
-  category: text("category", { enum: ["crops", "tools", "medications"] }).notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  unit: text("unit").notNull(),
-  quantity: integer("quantity").notNull(),
-  location: text("location").notNull(),
-  imageUrl: text("image_url"),
-  featured: boolean("featured").default(false),
-  active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+export const insertProductSchema = z.object({
+  name: z.string().min(1, "Product name is required"),
+  description: z.string().min(1, "Description is required"),
+  category: z.enum(["crops", "livestock", "farm-tools", "seeds", "fertilizers"]),
+  price: z.number().positive("Price must be positive"),
+  stock: z.number().int().min(0, "Stock must be non-negative").optional(),
+  location: z.string().min(1, "Location is required"),
+  imageUrl: z.string().url().optional().or(z.literal("")),
 });
 
-export const messages = pgTable("messages", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  senderId: varchar("sender_id").notNull(),
-  receiverId: varchar("receiver_id").notNull(),
-  productId: varchar("product_id"),
-  content: text("content").notNull(),
-  read: boolean("read").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Create Zod schemas for validation
-export const insertUserSchema = createInsertSchema(users).pick({
-  email: true,
-  password: true,
-  firstName: true,
-  lastName: true,
-  accountType: true,
-  location: true,
-  phone: true,
-});
-
-export const insertProductSchema = createInsertSchema(products).pick({
-  name: true,
-  description: true,
-  category: true,
-  price: true,
-  unit: true,
-  quantity: true,
-  location: true,
-  imageUrl: true,
-});
-
-export const insertMessageSchema = createInsertSchema(messages).pick({
-  receiverId: true,
-  productId: true,
-  content: true,
+export const insertMessageSchema = z.object({
+  receiverId: z.string().min(1),
+  content: z.string().min(1),
 });
 
 // Type exports
-export type User = typeof users.$inferSelect;
-export type InsertUser = typeof users.$inferInsert;
-export type Product = typeof products.$inferSelect;
-export type InsertProduct = typeof products.$inferInsert;
-export type Message = typeof messages.$inferSelect;
-export type InsertMessage = typeof messages.$inferInsert;
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  location?: string;
+  phone?: string;
+  verified: boolean;
+  rating: string;
+  totalSales: number;
+  joinedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  category: string;
+  imageUrl?: string;
+  sellerId: string;
+  stock?: number;
+  location?: string;
+  featured: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type Message = {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  read: boolean;
+  createdAt: Date;
+};
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
