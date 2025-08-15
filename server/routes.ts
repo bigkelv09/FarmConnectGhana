@@ -2,12 +2,26 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { db } from "./db";
 import { users, products, messages } from "./db/schema";
-import { insertUserSchema, insertProductSchema, insertMessageSchema } from "./db/schema";
+import { insertUserSchema } from "./db/schema";
 import { eq, desc, and, or, ilike } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+// Custom validation schema for API endpoints
+const apiProductSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  category: z.string().min(1),
+  price: z.number().positive(),
+  quantity: z.number().int().positive(),
+  unit: z.string().min(1),
+  location: z.string(),
+  imageUrl: z.string().optional(),
+  stock: z.number().int().min(0).optional(),
+});
 
 // Extend Request type to include user
 declare global {
@@ -231,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Transformed data:", requestData);
 
-      const productData = insertProductSchema.parse(requestData);
+      const productData = apiProductSchema.parse(requestData);
       const [product] = await db.insert(products).values({
         ...productData,
         sellerId: req.user.id,
